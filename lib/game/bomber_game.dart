@@ -102,7 +102,10 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     // Create new components
     plane = game_plane.Plane(level: levelManager.level);
     bomb = Bomb();
-    buildings = levelManager.generateLevel(levelManager.level);
+    buildings = levelManager.generateLevel(
+      levelManager.level,
+      isBomber2025: selectedVersion == GameVersion.bomber2025,
+    );
 
     // Ensure bomb is deactivated
     bomb?.deactivate();

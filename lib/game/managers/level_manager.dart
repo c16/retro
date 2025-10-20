@@ -6,7 +6,7 @@ import 'package:bomber_game/game/components/building.dart';
 class LevelManager {
   int currentLevel = 1;
 
-  List<Building> generateLevel(int levelNumber) {
+  List<Building> generateLevel(int levelNumber, {bool isBomber2025 = false}) {
     final buildings = <Building>[];
     final random = Random();
 
@@ -38,6 +38,7 @@ class LevelManager {
         Building(
           position: Vector2(currentX, yPosition),
           currentHeight: height,
+          isBomber2025: isBomber2025,
         ),
       );
 

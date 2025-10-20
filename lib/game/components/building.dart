@@ -20,6 +20,7 @@ class Building extends PositionComponent {
   late RoofType roofType;
   late OppressionType oppressionType;
   bool hasGivenConsent = false; // For consent-based healing
+  bool isBomber2025; // Show labels only for Bomber-2025
 
   // Track jagged top edge - height variations for visual effect
   // Key is the block index (0 to blocksWide-1), value is offset in pixels
@@ -29,6 +30,7 @@ class Building extends PositionComponent {
   Building({
     required Vector2 position,
     required this.currentHeight,
+    this.isBomber2025 = false,
   }) : initialHeight = currentHeight,
        super(
           position: position,
@@ -193,21 +195,23 @@ class Building extends PositionComponent {
       }
     }
 
-    // Draw oppression label on buildings (Bomber 2025)
-    final labelPaint = TextPaint(
-      style: TextStyle(
-        color: Color(0xFFFFFFFF), // White text
-        fontSize: 8,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+    // Draw oppression label on buildings (Bomber 2025 only)
+    if (isBomber2025) {
+      final labelPaint = TextPaint(
+        style: TextStyle(
+          color: Color(0xFFFFFFFF), // White text
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
+      );
 
-    labelPaint.render(
-      canvas,
-      oppressionLabel,
-      Vector2(width / 2, size.y / 2),
-      anchor: Anchor.center,
-    );
+      labelPaint.render(
+        canvas,
+        oppressionLabel,
+        Vector2(width / 2, size.y / 2),
+        anchor: Anchor.center,
+      );
+    }
   }
 
   // Check collision with a point
