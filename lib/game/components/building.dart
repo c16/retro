@@ -1,15 +1,25 @@
 import 'dart:ui';
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart' show TextPaint, TextStyle, FontWeight;
 import 'package:bomber_game/constants/game_constants.dart';
 
 enum RoofType { flat, peaked, dome }
+
+enum OppressionType {
+  genderBinary,
+  fossilFuel,
+  patriarchal,
+  colonizer,
+}
 
 class Building extends PositionComponent {
   int currentHeight;
   int initialHeight; // Track original height to know if building is damaged
   bool isDestroyed = false;
   late RoofType roofType;
+  late OppressionType oppressionType;
+  bool hasGivenConsent = false; // For consent-based healing
 
   // Track jagged top edge - height variations for visual effect
   // Key is the block index (0 to blocksWide-1), value is offset in pixels
@@ -35,10 +45,26 @@ class Building extends PositionComponent {
       jaggedTop[i] = 0;
     }
 
-    // Randomly assign roof type
+    // Randomly assign roof type and oppression type
     final random = Random();
     final roofChoice = random.nextInt(3);
     roofType = RoofType.values[roofChoice];
+
+    final oppressionChoice = random.nextInt(4);
+    oppressionType = OppressionType.values[oppressionChoice];
+  }
+
+  String get oppressionLabel {
+    switch (oppressionType) {
+      case OppressionType.genderBinary:
+        return 'Gender Binary\nEnforcement';
+      case OppressionType.fossilFuel:
+        return 'Fossil Fuel\nHQ';
+      case OppressionType.patriarchal:
+        return 'Patriarchal\nInstitution';
+      case OppressionType.colonizer:
+        return 'Colonizer\nMonument';
+    }
   }
 
   void reduceHeight() {
@@ -166,6 +192,22 @@ class Building extends PositionComponent {
           break;
       }
     }
+
+    // Draw oppression label on buildings (Bomber 2025)
+    final labelPaint = TextPaint(
+      style: TextStyle(
+        color: Color(0xFFFFFFFF), // White text
+        fontSize: 8,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+
+    labelPaint.render(
+      canvas,
+      oppressionLabel,
+      Vector2(width / 2, size.y / 2),
+      anchor: Anchor.center,
+    );
   }
 
   // Check collision with a point

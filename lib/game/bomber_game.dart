@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -11,8 +12,21 @@ import 'package:bomber_game/game/components/bomb.dart';
 import 'package:bomber_game/game/components/building.dart';
 import 'package:bomber_game/game/managers/level_manager.dart';
 import 'package:bomber_game/game/managers/score_manager.dart';
+import 'package:bomber_game/game/managers/sound_manager.dart';
 
-enum GameState { menu, playing, paused, gameOver, levelComplete }
+enum GameState {
+  versionSelect,
+  menu,
+  pronounSelection,
+  landAcknowledgment,
+  triggerWarning,
+  playing,
+  paused,
+  gameOver,
+  levelComplete,
+  privilegeCheck,
+  consentRequest,
+}
 
 class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   game_plane.Plane? plane;
@@ -21,9 +35,24 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   late LevelManager levelManager;
   late ScoreManager scoreManager;
   late Background background;
+  late SoundManager soundManager;
 
-  GameState gameState = GameState.menu;
+  GameState gameState = GameState.versionSelect;
   double _startCooldown = 0;
+  GameVersion selectedVersion = GameVersion.bomber1982;
+
+  // Bomber 2025 - Woke features (only used when selectedVersion == bomber2025)
+  String playerPronouns = 'they/them';
+  String planePronouns = 'it/its';
+  String skyPronouns = 'they/them';
+  double privilegeCheckTimer = 0;
+  double microaggressionTimer = 0;
+  int currentConsentBuildingIndex = -1;
+  bool waitingForConsent = false;
+  String lastAffirmation = '';
+  double affirmationTimer = 0;
+  int carbonOffsetsEarned = 0;
+  int emotionalLabor = 0;
 
   BomberGame();
 
@@ -34,6 +63,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     // Initialize managers
     levelManager = LevelManager();
     scoreManager = ScoreManager();
+    soundManager = SoundManager();
     await scoreManager.loadHighScore();
 
     // Set camera
