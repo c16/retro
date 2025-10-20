@@ -77,11 +77,20 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     );
     camera.viewfinder.anchor = Anchor.center;
 
-    // Add background
-    background = Background();
+    // Add background (will update based on version selection)
+    background = Background(isBomber2025: false);
     add(background);
 
-    // Don't initialize game objects yet - wait for user to start
+    // Don't initialize game objects yet - wait for version selection
+  }
+
+  void _updateBackgroundForVersion() {
+    // Remove old background
+    background.removeFromParent();
+
+    // Add new background based on selected version
+    background = Background(isBomber2025: selectedVersion == GameVersion.bomber2025);
+    add(background);
   }
 
   void _initializeGame() {
@@ -112,6 +121,20 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     gameState = GameState.playing;
     levelManager.reset();
     scoreManager.reset();
+
+    // Reset Bomber-2025 features
+    if (selectedVersion == GameVersion.bomber2025) {
+      privilegeCheckTimer = 0;
+      microaggressionTimer = 0;
+      emotionalLabor = 0;
+      carbonOffsetsEarned = 0;
+      affirmationTimer = 0;
+      lastAffirmation = '';
+    }
+
+    // Update background for selected version
+    _updateBackgroundForVersion();
+
     _initializeGame();
     _startCooldown = 0.5; // 0.5 second cooldown before allowing bomb drops
   }
@@ -133,6 +156,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     if (!_isPlaneOverBuildingCenter()) return;
 
     bomb!.drop(plane!.position);
+    soundManager.playDropSound(); // Play whistling drop sound
   }
 
   bool _isPlaneOverBuildingCenter() {
@@ -169,6 +193,32 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
       }
     }
 
+    // Bomber 2025 - Privilege check timer (every 30 seconds)
+    if (selectedVersion == GameVersion.bomber2025) {
+      privilegeCheckTimer += dt;
+      if (privilegeCheckTimer >= 30) {
+        privilegeCheckTimer = 0;
+        gameState = GameState.privilegeCheck;
+        soundManager.playPrivilegeCheckSound();
+        return;
+      }
+
+      // Bomber 2025 - Microaggression meter
+      microaggressionTimer += dt;
+      if (microaggressionTimer >= 1) {
+        microaggressionTimer = 0;
+      }
+
+      // Countdown affirmation timer
+      if (affirmationTimer > 0) {
+        affirmationTimer -= dt;
+        if (affirmationTimer < 0) {
+          affirmationTimer = 0;
+          lastAffirmation = '';
+        }
+      }
+    }
+
     _checkCollisions();
     _checkLevelComplete();
   }
@@ -186,6 +236,36 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
           building.reduceHeight();
           scoreManager.addBlockScore(levelManager.level);
           bomb!.deactivate();
+
+          // Play hit sound (white noise for 1982, bloop for 2025)
+          soundManager.playHitSound();
+
+          // Bomber 2025 - Show affirmation message
+          if (selectedVersion == GameVersion.bomber2025) {
+            final affirmations = [
+              'You are valid!',
+              'We\'re all healing together!',
+              'Your emotional labor is seen!',
+              'Doing the work!',
+              'Decolonizing in progress!',
+              'That\'s praxis!',
+              'Centering marginalized voices!',
+              'Disrupting systems!',
+              'Creating safe spaces!',
+              'Intersectional solidarity!',
+            ];
+            final random = Random();
+            lastAffirmation = affirmations[random.nextInt(affirmations.length)];
+            affirmationTimer = 2.0; // Show for 2 seconds
+
+            // Track emotional labor and carbon offsets
+            emotionalLabor++;
+            carbonOffsetsEarned++;
+
+            // Play affirmation sound
+            soundManager.playAffirmationSound();
+          }
+
           break;
         }
       }
@@ -232,6 +312,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   void _gameOver() {
     gameState = GameState.gameOver;
     scoreManager.saveHighScore();
+    soundManager.playGameOverSound();
   }
 
   void restartGame() {
@@ -245,7 +326,11 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   ) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.space) {
-        if (gameState == GameState.menu) {
+        if (gameState == GameState.versionSelect) {
+          // Space confirms selection and goes to menu
+          gameState = GameState.menu;
+          return KeyEventResult.handled;
+        } else if (gameState == GameState.menu) {
           startGame();
           return KeyEventResult.handled;
         } else if (gameState == GameState.playing) {
@@ -254,8 +339,28 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         } else if (gameState == GameState.gameOver) {
           restartGame();
           return KeyEventResult.handled;
+        } else if (gameState == GameState.privilegeCheck) {
+          // Acknowledge privilege and continue
+          gameState = GameState.playing;
+          return KeyEventResult.handled;
         }
         return KeyEventResult.handled;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit1 ||
+                 event.logicalKey == LogicalKeyboardKey.numpad1) {
+        if (gameState == GameState.versionSelect) {
+          selectedVersion = GameVersion.bomber1982;
+          soundManager.setVersion(GameVersion.bomber1982);
+          gameState = GameState.menu;
+          return KeyEventResult.handled;
+        }
+      } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
+                 event.logicalKey == LogicalKeyboardKey.numpad2) {
+        if (gameState == GameState.versionSelect) {
+          selectedVersion = GameVersion.bomber2025;
+          soundManager.setVersion(GameVersion.bomber2025);
+          gameState = GameState.menu;
+          return KeyEventResult.handled;
+        }
       } else if (event.logicalKey == LogicalKeyboardKey.keyP) {
         if (gameState == GameState.playing) {
           gameState = GameState.paused;
@@ -269,7 +374,9 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         }
         return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-        gameState = GameState.menu;
+        if (gameState == GameState.playing || gameState == GameState.paused) {
+          gameState = GameState.versionSelect;
+        }
         return KeyEventResult.handled;
       }
     }
@@ -294,7 +401,6 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   }
 
   void _renderUI(Canvas canvas) {
-    // Render score and level info
     final textPaint = TextPaint(
       style: TextStyle(
         color: GameConstants.uiTextColor,
@@ -310,44 +416,144 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
       ),
     );
 
-    // Score
-    textPaint.render(
-      canvas,
-      'Score: ${scoreManager.score}',
-      Vector2(10, 10),
-    );
+    // Version selection screen
+    if (gameState == GameState.versionSelect) {
+      _renderCenteredText(
+        canvas,
+        'SELECT GAME VERSION\n\n' +
+            '[1] BOMBER-1982\n' +
+            '    Classic Retro Edition\n\n' +
+            '[2] BOMBER-2025\n' +
+            '    Healing Harmony Edition\n\n' +
+            'Press 1 or 2',
+        24,
+      );
+      return;
+    }
 
-    // High Score
-    smallTextPaint.render(
-      canvas,
-      'High: ${scoreManager.high}',
-      Vector2(10, 35),
-    );
+    // Show game info during gameplay states
+    if (gameState == GameState.playing || gameState == GameState.paused ||
+        gameState == GameState.gameOver || gameState == GameState.levelComplete) {
 
-    // Level
-    textPaint.render(
-      canvas,
-      'Level: ${levelManager.level}',
-      Vector2(GameConstants.gameWidth - 120, 10),
-    );
+      if (selectedVersion == GameVersion.bomber2025) {
+        // Bomber 2025 UI
+        smallTextPaint.render(
+          canvas,
+          '${GameConstants.impactPointsName}:',
+          Vector2(10, 10),
+        );
+        smallTextPaint.render(
+          canvas,
+          '${scoreManager.score}',
+          Vector2(10, 28),
+        );
+        smallTextPaint.render(
+          canvas,
+          'Peak: ${scoreManager.high}',
+          Vector2(10, 50),
+        );
+        smallTextPaint.render(
+          canvas,
+          'Journey: ${levelManager.level}',
+          Vector2(GameConstants.gameWidth - 120, 10),
+        );
+        smallTextPaint.render(
+          canvas,
+          'Pronouns: $playerPronouns',
+          Vector2(10, GameConstants.gameHeight - 45),
+        );
+        smallTextPaint.render(
+          canvas,
+          'Emotional Labor: $emotionalLabor',
+          Vector2(10, GameConstants.gameHeight - 25),
+        );
+        smallTextPaint.render(
+          canvas,
+          'Carbon Offsets: $carbonOffsetsEarned',
+          Vector2(GameConstants.gameWidth - 180, GameConstants.gameHeight - 25),
+        );
+      } else {
+        // Bomber 1982 UI
+        textPaint.render(
+          canvas,
+          'Score: ${scoreManager.score}',
+          Vector2(10, 10),
+        );
+        smallTextPaint.render(
+          canvas,
+          'High: ${scoreManager.high}',
+          Vector2(10, 35),
+        );
+        textPaint.render(
+          canvas,
+          'Level: ${levelManager.level}',
+          Vector2(GameConstants.gameWidth - 120, 10),
+        );
+      }
+    }
 
     // Game state messages
     if (gameState == GameState.menu) {
-      _renderCenteredText(
-        canvas,
-        'BOMBER GAME\n\nPress SPACE or TAP to start',
-        30,
-      );
+      final title = selectedVersion == GameVersion.bomber2025
+          ? '${GameConstants.gameTitle}\n${GameConstants.gameSubtitle}'
+          : 'BOMBER GAME';
+      final instructions = selectedVersion == GameVersion.bomber2025
+          ? '\n\nPress SPACE or TAP to begin your journey\n\n(Created on stolen indigenous land)\nTrigger Warning: Contains oppressive structures'
+          : '\n\nPress SPACE or TAP to start';
+      _renderCenteredText(canvas, title + instructions,
+          selectedVersion == GameVersion.bomber2025 ? 18 : 30);
     } else if (gameState == GameState.paused) {
-      _renderCenteredText(canvas, 'PAUSED\n\nPress P to continue', 30);
+      final pauseText = selectedVersion == GameVersion.bomber2025
+          ? 'SELF-CARE PAUSE\n\nTake time for emotional wellness\nPress P to continue the work'
+          : 'PAUSED\n\nPress P to continue';
+      _renderCenteredText(canvas, pauseText, 26);
     } else if (gameState == GameState.gameOver) {
+      final gameOverText = selectedVersion == GameVersion.bomber2025
+          ? 'GROWTH OPPORTUNITY\n\n${GameConstants.impactPointsName}: ${scoreManager.score}\n\nFailure is just another learning moment\nThe work continues\n\nPress SPACE or TAP to resume your journey'
+          : 'GAME OVER\n\nScore: ${scoreManager.score}\nPress SPACE or TAP to restart';
+      _renderCenteredText(canvas, gameOverText,
+          selectedVersion == GameVersion.bomber2025 ? 22 : 30);
+    } else if (gameState == GameState.levelComplete) {
+      final completeText = selectedVersion == GameVersion.bomber2025
+          ? 'Structures Decolonized!\n\nBut remember:\nThe work is never truly done'
+          : 'Level Complete!';
+      _renderCenteredText(canvas, completeText,
+          selectedVersion == GameVersion.bomber2025 ? 30 : 40);
+    } else if (gameState == GameState.privilegeCheck && selectedVersion == GameVersion.bomber2025) {
       _renderCenteredText(
         canvas,
-        'GAME OVER\n\nScore: ${scoreManager.score}\nPress SPACE or TAP to restart',
-        30,
+        'PRIVILEGE CHECK\n\nPlease take a moment to acknowledge\nyour privilege before continuing.\n\nAre you being truly mindful?\n\nPress SPACE to acknowledge',
+        22,
       );
-    } else if (gameState == GameState.levelComplete) {
-      _renderCenteredText(canvas, 'Level Complete!', 40);
+    }
+
+    // Bomber 2025: Show microaggression warnings and affirmations during gameplay
+    if (selectedVersion == GameVersion.bomber2025 && gameState == GameState.playing) {
+      if (plane != null) {
+        smallTextPaint.render(
+          canvas,
+          'Warning: Rushing through important conversations',
+          Vector2(GameConstants.gameWidth / 2, 80),
+          anchor: Anchor.center,
+        );
+      }
+
+      // Show affirmation message
+      if (affirmationTimer > 0 && lastAffirmation.isNotEmpty) {
+        final affirmationPaint = TextPaint(
+          style: TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+        affirmationPaint.render(
+          canvas,
+          lastAffirmation,
+          Vector2(GameConstants.gameWidth / 2, GameConstants.gameHeight / 2 - 50),
+          anchor: Anchor.center,
+        );
+      }
     }
   }
 
