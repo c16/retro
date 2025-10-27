@@ -504,6 +504,61 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
           'Journey: ${levelManager.level}',
           Vector2(size.x - 120, 10),
         );
+
+        // Microaggression Meter
+        final meterWidth = 150.0;
+        final meterHeight = 12.0;
+        final meterX = size.x / 2 - meterWidth / 2;
+        final meterY = 10.0;
+
+        // Draw meter label
+        smallTextPaint.render(
+          canvas,
+          'Microaggression Meter',
+          Vector2(meterX + meterWidth / 2, meterY - 15),
+          anchor: Anchor.center,
+        );
+
+        // Draw meter background (empty)
+        final meterBgPaint = Paint()
+          ..color = const Color(0xFF333333)
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(
+          Rect.fromLTWH(meterX, meterY, meterWidth, meterHeight),
+          meterBgPaint,
+        );
+
+        // Draw meter border
+        final meterBorderPaint = Paint()
+          ..color = const Color(0xFFFFFFFF)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+        canvas.drawRect(
+          Rect.fromLTWH(meterX, meterY, meterWidth, meterHeight),
+          meterBorderPaint,
+        );
+
+        // Draw meter fill (increases over time, resets at 1 second)
+        final fillPercent = microaggressionTimer; // 0.0 to 1.0
+        final fillWidth = meterWidth * fillPercent;
+
+        // Color changes from green to yellow to red
+        Color fillColor;
+        if (fillPercent < 0.33) {
+          fillColor = const Color(0xFF00FF00); // Green
+        } else if (fillPercent < 0.66) {
+          fillColor = const Color(0xFFFFFF00); // Yellow
+        } else {
+          fillColor = const Color(0xFFFF0000); // Red
+        }
+
+        final meterFillPaint = Paint()
+          ..color = fillColor
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(
+          Rect.fromLTWH(meterX, meterY, fillWidth, meterHeight),
+          meterFillPaint,
+        );
         smallTextPaint.render(
           canvas,
           'Pronouns: $playerPronouns',

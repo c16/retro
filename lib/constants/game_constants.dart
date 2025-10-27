@@ -20,7 +20,7 @@ class GameConstants {
   static const double bombGravity2025 = 80; // Bomber-2025 - gentle healing energy
 
   // Building constants
-  static const double buildingBlockWidth = 80; // Doubled from 40
+  static const double buildingBlockWidth = 50; // Reduced for better landscape fit
   static const double buildingBlockHeight = 20;
   static const int minBuildingHeight = 3;
   static const int maxBuildingHeight = 8;

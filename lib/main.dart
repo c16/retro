@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:bomber_game/game/bomber_game.dart';
@@ -25,6 +26,14 @@ Future<void> main() async {
     });
   }
 
+  // For Android: Set system UI mode to show status bar
+  if (Platform.isAndroid) {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+    );
+  }
+
   runApp(const BomberGameApp());
 }
 
@@ -41,7 +50,9 @@ class BomberGameApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: Scaffold(
-        body: GameWidget(game: BomberGame()),
+        body: SafeArea(
+          child: GameWidget(game: BomberGame()),
+        ),
       ),
     );
   }

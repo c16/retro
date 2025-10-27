@@ -100,16 +100,17 @@ class Building extends PositionComponent {
       return;
     }
 
+    // Monochrome buildings: black walls, white windows
     final buildingPaint = Paint()
-      ..color = GameConstants.buildingColor
+      ..color = const Color(0xFF000000) // Black walls
       ..style = PaintingStyle.fill;
 
     final windowPaint = Paint()
-      ..color = const Color(0xFF000000)
+      ..color = const Color(0xFFFFFFFF) // White windows
       ..style = PaintingStyle.fill;
 
     final roofPaint = Paint()
-      ..color = const Color(0xFF8B4513) // Darker brown for roof
+      ..color = const Color(0xFF000000) // Black roof
       ..style = PaintingStyle.fill;
 
     final blockWidth = GameConstants.buildingBlockHeight;
