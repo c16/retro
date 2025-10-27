@@ -26,12 +26,14 @@ A retro arcade-style bomber game built with Flutter and Flame engine. Choose bet
 
 ### Required Software
 - **Flutter SDK** (3.9.2 or higher)
-- **Linux** (tested on Ubuntu/Debian-based systems)
-- **GStreamer** development libraries (for audio)
+- **Platform Support:**
+  - Linux (tested on Ubuntu/Debian-based systems)
+  - Android (API level 21+)
+  - Windows, macOS (should work but untested)
 
-### System Dependencies
+### System Dependencies (Linux only)
 
-Install GStreamer libraries (required for sound):
+Install GStreamer libraries (required for sound on Linux):
 
 ```bash
 sudo apt-get update
@@ -42,8 +44,8 @@ sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/retro.git
-   cd retro/bomber_game
+   git clone https://github.com/c16/retro.git
+   cd retro
    ```
 
 2. **Install Flutter dependencies:**
@@ -51,7 +53,9 @@ sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
    flutter pub get
    ```
 
-3. **Build the Linux application:**
+3. **Build for your platform:**
+
+   **Linux:**
    ```bash
    flutter build linux --release
    ```
@@ -61,14 +65,31 @@ sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
    build/linux/x64/release/bundle/bomber_game
    ```
 
+   **Android:**
+   ```bash
+   flutter build apk --release
+   ```
+
+   The APK will be located at:
+   ```
+   build/app/outputs/flutter-apk/app-release.apk
+   ```
+
+   **Android App Bundle (for Google Play):**
+   ```bash
+   flutter build appbundle --release
+   ```
+
 ## Installation
 
-### Option 1: Run from Build Directory
+### Linux Installation
+
+**Option 1: Run from Build Directory**
 ```bash
 ./build/linux/x64/release/bundle/bomber_game
 ```
 
-### Option 2: Install System-wide
+**Option 2: Install System-wide**
 
 Copy the entire bundle to a system location:
 
@@ -83,7 +104,7 @@ Then run from anywhere:
 bomber_game
 ```
 
-### Option 3: Create Desktop Entry
+**Option 3: Create Desktop Entry**
 
 Create a `.desktop` file for easy launcher access:
 
@@ -100,18 +121,37 @@ Categories=Game;ArcadeGame;
 EOF
 ```
 
+### Android Installation
+
+1. **Enable installation from unknown sources** on your Android device (Settings > Security)
+
+2. **Transfer the APK** to your device:
+   ```bash
+   adb install build/app/outputs/flutter-apk/app-release.apk
+   ```
+
+   Or copy `app-release.apk` to your device and open it to install.
+
+3. **Launch** the game from your app drawer
+
 ## How to Play
 
 ### Version Selection
 On startup, choose your game version:
-- Press **1** for Bomber-1982 (Classic)
-- Press **2** for Bomber-2025 (Healing Harmony)
+- **Keyboard:** Press **1** for Bomber-1982 or **2** for Bomber-2025
+- **Touch/Mouse:** Tap top half of screen for Bomber-1982, bottom half for Bomber-2025
 
 ### Controls
+
+**Desktop (Keyboard):**
 - **SPACE** - Drop bomb / Start game / Confirm
 - **P** - Pause/Unpause
 - **ESC** - Return to version selection
 - **Mouse Click** - Alternative to spacebar
+
+**Mobile (Touch):**
+- **Tap screen** - Drop bomb / Start game / Confirm / Navigate menus
+- The plane moves automatically - just tap to drop bombs!
 
 ### Gameplay
 - Guide your plane left-to-right across the screen

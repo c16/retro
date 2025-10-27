@@ -388,12 +388,47 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
 
   @override
   void onTapDown(TapDownInfo info) {
-    if (gameState == GameState.menu) {
+    final tapPos = info.eventPosition.global;
+
+    if (gameState == GameState.versionSelect) {
+      // Handle version selection with tap zones
+      // Top half = Bomber-1982, Bottom half = Bomber-2025
+      if (tapPos.y < GameConstants.gameHeight / 2) {
+        selectedVersion = GameVersion.bomber1982;
+        soundManager.setVersion(GameVersion.bomber1982);
+        gameState = GameState.menu;
+      } else {
+        selectedVersion = GameVersion.bomber2025;
+        soundManager.setVersion(GameVersion.bomber2025);
+        gameState = GameState.menu;
+      }
+    } else if (gameState == GameState.menu) {
       startGame();
+    } else if (gameState == GameState.pronounSelection) {
+      // Bomber 2025 - Accept default pronouns
+      gameState = GameState.landAcknowledgment;
+    } else if (gameState == GameState.landAcknowledgment) {
+      // Bomber 2025 - Continue to trigger warning
+      gameState = GameState.triggerWarning;
+    } else if (gameState == GameState.triggerWarning) {
+      // Bomber 2025 - Continue to playing
+      gameState = GameState.playing;
     } else if (gameState == GameState.playing) {
       dropBomb();
     } else if (gameState == GameState.gameOver) {
       restartGame();
+    } else if (gameState == GameState.levelComplete) {
+      nextLevel();
+    } else if (gameState == GameState.privilegeCheck) {
+      // Bomber 2025 - Continue after privilege check
+      gameState = GameState.playing;
+    } else if (gameState == GameState.consentRequest) {
+      // Bomber 2025 - Give consent
+      waitingForConsent = false;
+      gameState = GameState.playing;
+    } else if (gameState == GameState.paused) {
+      // Unpause
+      gameState = GameState.playing;
     }
   }
 
@@ -428,7 +463,8 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
             '    Classic Retro Edition\n\n' +
             '[2] BOMBER-2025\n' +
             '    Healing Harmony Edition\n\n' +
-            'Press 1 or 2',
+            'Press 1 or 2\n' +
+            'or tap top/bottom half',
         24,
       );
       return;
@@ -507,8 +543,8 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
           selectedVersion == GameVersion.bomber2025 ? 18 : 30);
     } else if (gameState == GameState.paused) {
       final pauseText = selectedVersion == GameVersion.bomber2025
-          ? 'SELF-CARE PAUSE\n\nTake time for emotional wellness\nPress P to continue the work'
-          : 'PAUSED\n\nPress P to continue';
+          ? 'SELF-CARE PAUSE\n\nTake time for emotional wellness\nPress P or TAP to continue the work'
+          : 'PAUSED\n\nPress P or TAP to continue';
       _renderCenteredText(canvas, pauseText, 26);
     } else if (gameState == GameState.gameOver) {
       final gameOverText = selectedVersion == GameVersion.bomber2025
@@ -525,7 +561,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     } else if (gameState == GameState.privilegeCheck && selectedVersion == GameVersion.bomber2025) {
       _renderCenteredText(
         canvas,
-        'PRIVILEGE CHECK\n\nPlease take a moment to acknowledge\nyour privilege before continuing.\n\nAre you being truly mindful?\n\nPress SPACE to acknowledge',
+        'PRIVILEGE CHECK\n\nPlease take a moment to acknowledge\nyour privilege before continuing.\n\nAre you being truly mindful?\n\nPress SPACE or TAP to acknowledge',
         22,
       );
     }
