@@ -241,12 +241,187 @@ flutter build apk --release
 - Maintain consistent component patterns
 - Document reusable patterns for future games
 
-### Version Control
-- Each game in its own subdirectory
-- Main branch contains stable releases
-- Feature branches for development
-- Comprehensive commit messages
-- Regular cleanup of build artifacts
+### Version Control and Development Workflow
+
+**IMPORTANT**: Follow this workflow strictly for all development:
+
+#### Branch Strategy
+- **`master`**: Production-ready code only - always stable
+- **Feature branches**: All new features and bug fixes developed here
+- **Naming convention**: `feature/description` or `fix/description`
+
+#### Development Process
+
+1. **Create Feature Branch**
+   ```bash
+   cd /home/terry/projects/claude-projects/retro
+   git checkout -b feature/your-feature-name
+   # OR for bug fixes:
+   git checkout -b fix/bug-description
+   ```
+
+2. **Make Changes**
+   - Implement feature or fix on the feature branch
+   - Commit frequently with descriptive messages
+   - Test locally during development
+
+3. **Pre-Merge Testing (CRITICAL)**
+
+   **Create test worktree:**
+   ```bash
+   # Create a clean worktree to test the feature branch
+   git worktree add /tmp/retro-test-${BRANCH_NAME} ${BRANCH_NAME}
+   cd /tmp/retro-test-${BRANCH_NAME}
+   ```
+
+   **Build ALL platforms:**
+   ```bash
+   # Test Linux build
+   flutter pub get
+   flutter build linux --release
+   ./build/linux/x64/release/bundle/bomber_game  # Verify it runs
+
+   # Test Android build
+   flutter build apk --release
+   # Verify APK location: build/app/outputs/flutter-apk/app-release.apk
+
+   # Optional: Test other platforms
+   # flutter build web --release
+   # flutter build windows --release
+   ```
+
+   **Cleanup worktree:**
+   ```bash
+   cd /home/terry/projects/claude-projects/retro
+   git worktree remove /tmp/retro-test-${BRANCH_NAME}
+   ```
+
+4. **Merge to Master**
+
+   **Only after successful testing:**
+   ```bash
+   git checkout master
+   git merge feature/your-feature-name
+   # OR for clean history:
+   git merge --squash feature/your-feature-name
+   git commit
+   ```
+
+5. **Push to GitHub**
+
+   **NEVER push automatically. Always ask user first:**
+   - ❌ DO NOT: `git push origin master` automatically
+   - ✅ DO: Ask "Ready to push to GitHub?" and wait for confirmation
+   - Only push after explicit user approval
+
+6. **Cleanup**
+   ```bash
+   # Delete feature branch after successful merge
+   git branch -d feature/your-feature-name
+   ```
+
+#### Testing Requirements Before Merge
+
+**Mandatory checks:**
+- [ ] Linux release build succeeds
+- [ ] Linux binary runs without crashes
+- [ ] Android APK build succeeds
+- [ ] No compilation errors or warnings
+- [ ] Version selection works
+- [ ] Core gameplay functions correctly
+- [ ] No runtime exceptions in console
+- [ ] Sound effects play correctly (if applicable)
+- [ ] High scores persist (if applicable)
+- [ ] UI scales correctly on different screen sizes
+
+**Testing checklist template:**
+```bash
+# 1. Build Linux
+flutter clean
+flutter pub get
+flutter build linux --release
+./build/linux/x64/release/bundle/bomber_game
+
+# 2. Build Android
+flutter build apk --release
+ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+# 3. Manual testing
+# - Start game
+# - Select version 1 and 2
+# - Play one complete level
+# - Check for crashes/errors
+# - Verify sound works
+# - Check responsive scaling
+```
+
+#### Example Workflow
+
+```bash
+# Starting new feature
+git checkout master
+git pull origin master
+git checkout -b feature/add-powerups
+
+# ... make changes ...
+git add .
+git commit -m "Add powerup system with 3 types"
+
+# Test in worktree
+git worktree add /tmp/retro-test feature/add-powerups
+cd /tmp/retro-test
+flutter build linux --release && flutter build apk --release
+./build/linux/x64/release/bundle/bomber_game  # Manual test
+cd /home/terry/projects/claude-projects/retro
+git worktree remove /tmp/retro-test
+
+# Merge after successful testing
+git checkout master
+git merge feature/add-powerups
+
+# ASK USER: "Ready to push changes to GitHub?"
+# WAIT for confirmation
+# After approval:
+git push origin master
+
+# Cleanup
+git branch -d feature/add-powerups
+```
+
+#### Commit Message Standards
+```
+Brief description (50 chars or less)
+
+Detailed explanation of changes if needed.
+Multiple paragraphs are fine.
+
+- Bullet points for multiple changes
+- Another change
+- Yet another change
+
+Testing performed:
+- Linux build: ✓
+- Android build: ✓
+- Manual gameplay: ✓
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+#### Emergency Hotfixes
+
+For critical bugs in production:
+```bash
+git checkout master
+git checkout -b hotfix/critical-crash
+# ... fix the bug ...
+# Test in worktree (same process)
+git checkout master
+git merge hotfix/critical-crash
+# Ask before pushing
+git branch -d hotfix/critical-crash
+```
 
 ---
 
