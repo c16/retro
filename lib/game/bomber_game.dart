@@ -34,7 +34,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   List<Building>? buildings;
   late LevelManager levelManager;
   late ScoreManager scoreManager;
-  late Background background;
+  Background? background;
   late SoundManager soundManager;
 
   GameState gameState = GameState.versionSelect;
@@ -72,7 +72,8 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
 
     // Add background (will update based on version selection)
     background = Background(isBomber2025: false);
-    add(background);
+    background!.size = size;
+    add(background!);
 
     // Don't initialize game objects yet - wait for version selection
   }
@@ -81,16 +82,21 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     // Update background size when screen resizes
-    background.size = size;
+    if (background != null) {
+      background!.size = size;
+    }
   }
 
   void _updateBackgroundForVersion() {
     // Remove old background
-    background.removeFromParent();
+    if (background != null) {
+      background!.removeFromParent();
+    }
 
     // Add new background based on selected version
     background = Background(isBomber2025: selectedVersion == GameVersion.bomber2025);
-    add(background);
+    background!.size = size;
+    add(background!);
   }
 
   void _initializeGame() {
