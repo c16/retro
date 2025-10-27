@@ -66,22 +66,22 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     soundManager = SoundManager();
     await scoreManager.loadHighScore();
 
-    // Set camera
-    camera.viewfinder.visibleGameSize = Vector2(
-      GameConstants.gameWidth,
-      GameConstants.gameHeight,
-    );
-    camera.viewfinder.position = Vector2(
-      GameConstants.gameWidth / 2,
-      GameConstants.gameHeight / 2,
-    );
-    camera.viewfinder.anchor = Anchor.center;
+    // Set camera to use full canvas - no fixed size
+    // This allows the game to scale to any screen size
+    camera.viewfinder.anchor = Anchor.topLeft;
 
     // Add background (will update based on version selection)
     background = Background(isBomber2025: false);
     add(background);
 
     // Don't initialize game objects yet - wait for version selection
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Update background size when screen resizes
+    background.size = size;
   }
 
   void _updateBackgroundForVersion() {
@@ -99,11 +99,13 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     children.whereType<Bomb>().forEach((b) => b.removeFromParent());
     children.whereType<Building>().forEach((b) => b.removeFromParent());
 
-    // Create new components
-    plane = game_plane.Plane(level: levelManager.level);
-    bomb = Bomb();
+    // Create new components with screen dimensions
+    plane = game_plane.Plane(level: levelManager.level, screenWidth: size.x);
+    bomb = Bomb(screenHeight: size.y);
     buildings = levelManager.generateLevel(
       levelManager.level,
+      screenWidth: size.x,
+      screenHeight: size.y,
       isBomber2025: selectedVersion == GameVersion.bomber2025,
     );
 
@@ -393,7 +395,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     if (gameState == GameState.versionSelect) {
       // Handle version selection with tap zones
       // Top half = Bomber-1982, Bottom half = Bomber-2025
-      if (tapPos.y < GameConstants.gameHeight / 2) {
+      if (tapPos.y < size.y / 2) {
         selectedVersion = GameVersion.bomber1982;
         soundManager.setVersion(GameVersion.bomber1982);
         gameState = GameState.menu;
@@ -494,22 +496,22 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         smallTextPaint.render(
           canvas,
           'Journey: ${levelManager.level}',
-          Vector2(GameConstants.gameWidth - 120, 10),
+          Vector2(size.x - 120, 10),
         );
         smallTextPaint.render(
           canvas,
           'Pronouns: $playerPronouns',
-          Vector2(10, GameConstants.gameHeight - 45),
+          Vector2(10, size.y - 45),
         );
         smallTextPaint.render(
           canvas,
           'Emotional Labor: $emotionalLabor',
-          Vector2(10, GameConstants.gameHeight - 25),
+          Vector2(10, size.y - 25),
         );
         smallTextPaint.render(
           canvas,
           'Carbon Offsets: $carbonOffsetsEarned',
-          Vector2(GameConstants.gameWidth - 180, GameConstants.gameHeight - 25),
+          Vector2(size.x - 180, size.y - 25),
         );
       } else {
         // Bomber 1982 UI
@@ -526,7 +528,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         textPaint.render(
           canvas,
           'Level: ${levelManager.level}',
-          Vector2(GameConstants.gameWidth - 120, 10),
+          Vector2(size.x - 120, 10),
         );
       }
     }
@@ -572,7 +574,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         smallTextPaint.render(
           canvas,
           'Warning: Rushing through important conversations',
-          Vector2(GameConstants.gameWidth / 2, 80),
+          Vector2(size.x / 2, 80),
           anchor: Anchor.center,
         );
       }
@@ -589,7 +591,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         affirmationPaint.render(
           canvas,
           lastAffirmation,
-          Vector2(GameConstants.gameWidth / 2, GameConstants.gameHeight / 2 - 50),
+          Vector2(size.x / 2, size.y / 2 - 50),
           anchor: Anchor.center,
         );
       }
@@ -608,7 +610,7 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
     textPaint.render(
       canvas,
       text,
-      Vector2(GameConstants.gameWidth / 2, GameConstants.gameHeight / 2),
+      Vector2(size.x / 2, size.y / 2),
       anchor: Anchor.center,
     );
   }

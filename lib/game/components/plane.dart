@@ -8,8 +8,9 @@ class Plane extends PositionComponent {
   int level = 1;
   double propellerTimer = 0;
   bool propellerVisible = true;
+  double screenWidth;
 
-  Plane({required this.level}) {
+  Plane({required this.level, this.screenWidth = 800}) {
     size = Vector2(GameConstants.planeWidth, GameConstants.planeHeight);
     position = Vector2(0, GameConstants.planeStartY);
     speed = GameConstants.planeSpeed + (level - 1) * GameConstants.planeSpeedIncrease;
@@ -31,7 +32,7 @@ class Plane extends PositionComponent {
     }
 
     // Check if reached right edge - wrap to left and drop altitude
-    if (position.x >= GameConstants.gameWidth) {
+    if (position.x >= screenWidth) {
       position.x = -width;
       dropAltitude();
     }

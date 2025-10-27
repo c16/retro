@@ -6,7 +6,12 @@ import 'package:bomber_game/game/components/building.dart';
 class LevelManager {
   int currentLevel = 1;
 
-  List<Building> generateLevel(int levelNumber, {bool isBomber2025 = false}) {
+  List<Building> generateLevel(
+    int levelNumber, {
+    double screenWidth = 800,
+    double screenHeight = 600,
+    bool isBomber2025 = false,
+  }) {
     final buildings = <Building>[];
     final random = Random();
 
@@ -15,7 +20,7 @@ class LevelManager {
     final double totalBuildingWidth = GameConstants.buildingBlockWidth + gapWidth;
 
     // Calculate number of buildings that can fit with gaps
-    int buildingCount = (GameConstants.gameWidth / totalBuildingWidth).floor();
+    int buildingCount = (screenWidth / totalBuildingWidth).floor();
 
     // Maximum height increases with level
     int maxHeight = min(
@@ -31,7 +36,7 @@ class LevelManager {
           random.nextInt(maxHeight - GameConstants.minBuildingHeight + 1);
 
       // Position at bottom of screen
-      double yPosition = GameConstants.gameHeight -
+      double yPosition = screenHeight -
           (height * GameConstants.buildingBlockHeight);
 
       buildings.add(

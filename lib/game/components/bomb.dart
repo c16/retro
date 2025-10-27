@@ -5,8 +5,9 @@ import 'package:bomber_game/constants/game_constants.dart';
 class Bomb extends PositionComponent {
   bool isActive = false;
   double velocity = 0;
+  double screenHeight;
 
-  Bomb() {
+  Bomb({this.screenHeight = 600}) {
     size = Vector2(GameConstants.bombWidth, GameConstants.bombHeight);
     position = Vector2(-1000, -1000); // Initialize off-screen
   }
@@ -30,7 +31,7 @@ class Bomb extends PositionComponent {
     position.y += velocity * dt;
 
     // Check if bomb has fallen off screen
-    if (position.y >= GameConstants.gameHeight) {
+    if (position.y >= screenHeight) {
       deactivate();
     }
   }
