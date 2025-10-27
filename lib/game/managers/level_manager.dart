@@ -15,12 +15,16 @@ class LevelManager {
     final buildings = <Building>[];
     final random = Random();
 
-    // Gap between buildings is 10% of building width
-    final double gapWidth = GameConstants.buildingBlockWidth * 0.1;
-    final double totalBuildingWidth = GameConstants.buildingBlockWidth + gapWidth;
+    // Limit to maximum 10 buildings
+    const int maxBuildings = 10;
 
-    // Calculate number of buildings that can fit with gaps
-    int buildingCount = (screenWidth / totalBuildingWidth).floor();
+    // Calculate spacing to fit exactly 10 buildings across screen
+    final double totalWidthForBuildings = screenWidth;
+    final double buildingWidth = GameConstants.buildingBlockWidth;
+    final double totalGapSpace = totalWidthForBuildings - (maxBuildings * buildingWidth);
+    final double gapWidth = totalGapSpace / (maxBuildings + 1); // Gaps before, between, and after
+
+    int buildingCount = maxBuildings;
 
     // Maximum height increases with level
     int maxHeight = min(
@@ -28,7 +32,8 @@ class LevelManager {
       GameConstants.minBuildingHeight + levelNumber,
     );
 
-    double currentX = 0;
+    // Start with initial gap
+    double currentX = gapWidth;
 
     for (int i = 0; i < buildingCount; i++) {
       // Random height for each building - ensures variety in heights
@@ -47,8 +52,8 @@ class LevelManager {
         ),
       );
 
-      // Move to next building position (with gap)
-      currentX += totalBuildingWidth;
+      // Move to next building position (building width + gap)
+      currentX += buildingWidth + gapWidth;
     }
 
     return buildings;

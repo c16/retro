@@ -505,17 +505,17 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
           Vector2(size.x - 120, 10),
         );
 
-        // Microaggression Meter
+        // Microaggression Meter (positioned below status bar)
         final meterWidth = 150.0;
         final meterHeight = 12.0;
         final meterX = size.x / 2 - meterWidth / 2;
-        final meterY = 10.0;
+        final meterY = 40.0; // Moved down to avoid Android status bar
 
         // Draw meter label
         smallTextPaint.render(
           canvas,
           'Microaggression Meter',
-          Vector2(meterX + meterWidth / 2, meterY - 15),
+          Vector2(meterX + meterWidth / 2, meterY - 12),
           anchor: Anchor.center,
         );
 
