@@ -12,6 +12,7 @@ class SoundManager {
   final AudioPlayer _dropPlayer = AudioPlayer();
   final AudioPlayer _hitPlayer = AudioPlayer();
   final AudioPlayer _affirmationPlayer = AudioPlayer();
+  final AudioPlayer _explosionPlayer = AudioPlayer();
   bool _soundEnabled = true;
   GameVersion _currentVersion = GameVersion.bomber1982;
 
@@ -176,9 +177,80 @@ class SoundManager {
     }
   }
 
+  Future<void> playExplosionSound() async {
+    if (!_soundEnabled) return;
+    try {
+      // Create explosion sound: mix of low rumble and descending tone
+      final bytes = _generateExplosion(0.4);
+      await _explosionPlayer.play(BytesSource(bytes));
+    } catch (e) {
+      // Silently fail
+    }
+  }
+
+  // Generate explosion sound effect
+  Uint8List _generateExplosion(double duration) {
+    const int sampleRate = 22050;
+    const int numChannels = 1;
+    const int bitsPerSample = 16;
+    final int numSamples = (sampleRate * duration).toInt();
+    final int dataSize = numSamples * numChannels * (bitsPerSample ~/ 8);
+    final int fileSize = 44 + dataSize;
+
+    final bytes = Uint8List(fileSize);
+    final byteData = ByteData.view(bytes.buffer);
+
+    // WAV Header (same as _generateTone)
+    bytes[0] = 0x52; bytes[1] = 0x49; bytes[2] = 0x46; bytes[3] = 0x46;
+    byteData.setUint32(4, fileSize - 8, Endian.little);
+    bytes[8] = 0x57; bytes[9] = 0x41; bytes[10] = 0x56; bytes[11] = 0x45;
+    bytes[12] = 0x66; bytes[13] = 0x6D; bytes[14] = 0x74; bytes[15] = 0x20;
+    byteData.setUint32(16, 16, Endian.little);
+    byteData.setUint16(20, 1, Endian.little);
+    byteData.setUint16(22, numChannels, Endian.little);
+    byteData.setUint32(24, sampleRate, Endian.little);
+    byteData.setUint32(28, sampleRate * numChannels * (bitsPerSample ~/ 8), Endian.little);
+    byteData.setUint16(32, numChannels * (bitsPerSample ~/ 8), Endian.little);
+    byteData.setUint16(34, bitsPerSample, Endian.little);
+    bytes[36] = 0x64; bytes[37] = 0x61; bytes[38] = 0x74; bytes[39] = 0x61;
+    byteData.setUint32(40, dataSize, Endian.little);
+
+    final random = Random();
+    int offset = 44;
+
+    // Generate explosion: descending rumble with white noise
+    for (int i = 0; i < numSamples; i++) {
+      final t = i / sampleRate;
+      final progress = i / numSamples;
+
+      // Descending frequency from 200Hz to 50Hz
+      final freq = 200.0 * (1.0 - progress * 0.75);
+
+      // Low rumble tone
+      final rumble = sin(2 * pi * freq * t) * 0.3;
+
+      // White noise that fades in then out
+      final noiseEnvelope = (progress < 0.3) ? progress / 0.3 : (1.0 - progress) / 0.7;
+      final noise = (random.nextInt(65536) - 32768) / 32768.0 * 0.4 * noiseEnvelope;
+
+      // Amplitude envelope: quick attack, slower decay
+      final envelope = (progress < 0.1) ? progress / 0.1 : (1.0 - progress);
+
+      // Mix rumble and noise
+      final sample = (rumble + noise) * envelope;
+      final value = (sample * 32767).toInt().clamp(-32768, 32767);
+
+      byteData.setInt16(offset, value, Endian.little);
+      offset += 2;
+    }
+
+    return bytes;
+  }
+
   void dispose() {
     _dropPlayer.dispose();
     _hitPlayer.dispose();
     _affirmationPlayer.dispose();
+    _explosionPlayer.dispose();
   }
 }

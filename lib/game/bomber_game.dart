@@ -10,6 +10,7 @@ import 'package:bomber_game/game/components/background.dart';
 import 'package:bomber_game/game/components/plane.dart' as game_plane;
 import 'package:bomber_game/game/components/bomb.dart';
 import 'package:bomber_game/game/components/building.dart';
+import 'package:bomber_game/game/components/explosion.dart';
 import 'package:bomber_game/game/managers/level_manager.dart';
 import 'package:bomber_game/game/managers/score_manager.dart';
 import 'package:bomber_game/game/managers/sound_manager.dart';
@@ -298,6 +299,16 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
         if (planeBottomY >= buildingTopY) {
           // Check horizontal overlap
           if (planeRightX > buildingLeftX && planeLeftX < buildingRightX) {
+            // Create explosion at plane position
+            final explosionPos = Vector2(
+              plane!.position.x + plane!.width / 2,
+              plane!.position.y + plane!.height / 2,
+            );
+            add(Explosion(position: explosionPos));
+
+            // Play explosion sound
+            soundManager.playExplosionSound();
+
             _gameOver();
             return;
           }
