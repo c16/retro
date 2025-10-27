@@ -17,12 +17,13 @@ class LevelManager {
 
     // Limit to maximum 10 buildings
     const int maxBuildings = 10;
+    const double minGapWidth = 8.0; // Minimum gap between buildings
 
     // Calculate spacing to fit exactly 10 buildings across screen
     final double totalWidthForBuildings = screenWidth;
     final double buildingWidth = GameConstants.buildingBlockWidth;
     final double totalGapSpace = totalWidthForBuildings - (maxBuildings * buildingWidth);
-    final double gapWidth = totalGapSpace / (maxBuildings + 1); // Gaps before, between, and after
+    final double gapWidth = max(minGapWidth, totalGapSpace / (maxBuildings + 1)); // Gaps before, between, and after
 
     int buildingCount = maxBuildings;
 

@@ -309,6 +309,10 @@ class BomberGame extends FlameGame with KeyboardEvents, TapDetector {
             // Play explosion sound
             soundManager.playExplosionSound();
 
+            // Hide plane immediately
+            plane!.removeFromParent();
+            plane = null;
+
             _gameOver();
             return;
           }
