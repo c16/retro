@@ -26,6 +26,7 @@
 #include <nvs_flash.h>
 #include "audio.h"
 #include "game.h"
+#include "config.h"
 
 // Display instance
 TFT_eSPI tft = TFT_eSPI();
@@ -93,7 +94,12 @@ void setup() {
     }
 
     delay(500);
-    audio.setVolume(70);
+
+    // Initialize configuration system
+    Serial.println("Initializing configuration system...");
+    configManager.begin();
+    configManager.applyToGame();
+    Serial.println("✓ Configuration loaded");
 
     // Initialize game
     Serial.println("Initializing game engine...");
@@ -109,11 +115,15 @@ void setup() {
     Serial.println("║   - GPIO2 (opt): Rotate Left   ║");
     Serial.println("║   - GPIO3 (opt): Rotate Right  ║");
     Serial.println("║                                ║");
+    Serial.println("║   Serial Commands:             ║");
+    Serial.println("║   - Press 'M' for Config Menu  ║");
+    Serial.println("║                                ║");
     Serial.println("║   Audio Output: GPIO2 (PWM)    ║");
     Serial.println("║   Connect to speaker/amp       ║");
     Serial.println("╚════════════════════════════════╝\n");
 
     Serial.println("GAME READY! Press BOOT to start.\n");
+    Serial.println("💡 Tip: Press 'M' at any time to open the configuration menu\n");
 
     lastUpdate = millis();
     lastAudioUpdate = micros();
@@ -122,6 +132,10 @@ void setup() {
 void loop() {
     unsigned long now = millis();
     unsigned long nowMicros = micros();
+
+    // Check for configuration menu request
+    configManager.checkForMenuRequest();
+    configManager.processInput();
 
     // Update audio at high frequency for smooth playback
     if (nowMicros - lastAudioUpdate >= AUDIO_INTERVAL) {

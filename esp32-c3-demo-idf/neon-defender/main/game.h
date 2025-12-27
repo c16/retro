@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <vector>
+#include "config.h"
 
 // Display constants
 #define CENTER_X 80

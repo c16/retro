@@ -50,7 +50,27 @@ NEON DEFENDER is an over-the-top circular arena shooter featuring:
 - **GPIO2**: Rotate Left (manual control mode)
 - **GPIO3**: Rotate Right (manual control mode)
 
+### Serial Commands (via USB)
+- **Press 'M'**: Open configuration menu
+
 *Note: Without optional buttons, the game uses auto-aim mode*
+
+## ⚙️ Configuration Menu
+
+Access an interactive configuration menu via USB serial (115200 baud):
+
+**Press 'M' at any time to open the menu!**
+
+### What You Can Configure:
+- **Audio**: Volume, tempo, enable/disable music/SFX
+- **Gameplay**: Difficulty, health, powerup drop rate, enemy speed
+- **Display**: Brightness, FPS counter, screen shake, particles
+- **Controls**: Auto-aim, rotation speed
+- **Advanced**: Max particles, max enemies, debug mode
+
+Settings are **saved to flash** and persist across reboots!
+
+See [CONFIG-MENU-GUIDE.md](CONFIG-MENU-GUIDE.md) for complete menu documentation.
 
 ## 🔊 Audio System
 

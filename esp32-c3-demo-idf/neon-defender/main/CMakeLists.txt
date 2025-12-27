@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.cpp" "audio.cpp" "game.cpp"
+    SRCS "main.cpp" "audio.cpp" "game.cpp" "config.cpp"
     INCLUDE_DIRS "."
     REQUIRES
         arduino
