@@ -1,0 +1,26 @@
+# ESP32-C3 Configuration
+CONFIG_IDF_TARGET="esp32c3"
+
+# Flash size
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# Performance optimizations
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+
+# Arduino component
+CONFIG_ENABLE_ARDUINO_DEPENDS=y
+
+# Disable unnecessary features to save memory
+CONFIG_BT_ENABLED=n
+CONFIG_LWIP_IPV6=n
+
+# Optimization for speed
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# Increase stack size for rendering
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# Serial monitor
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
