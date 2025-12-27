@@ -84,9 +84,58 @@ void NeonDefender::update() {
 }
 
 void NeonDefender::handleInput() {
+    // Check physical buttons
     bool bootPressed = digitalRead(BOOT_BUTTON) == LOW;
     bool leftPressed = digitalRead(BTN_LEFT) == LOW;
     bool rightPressed = digitalRead(BTN_RIGHT) == LOW;
+
+    // Merge with serial controls
+    SerialControls& serialCtrl = serialController.getControls();
+    bootPressed = bootPressed || serialCtrl.shootPressed || serialCtrl.startPressed;
+    leftPressed = leftPressed || serialCtrl.leftPressed;
+    rightPressed = rightPressed || serialCtrl.rightPressed;
+
+    // Handle pause (serial only)
+    if (serialCtrl.pausePressed && m_state == STATE_PLAYING) {
+        m_state = STATE_PAUSED;
+        audio.stopMusic();
+        Serial.println("\n⏸️  GAME PAUSED");
+        return;
+    } else if (serialCtrl.pausePressed && m_state == STATE_PAUSED) {
+        m_state = STATE_PLAYING;
+        audio.startMusic();
+        Serial.println("\n▶️  GAME RESUMED");
+        return;
+    }
+
+    // Handle restart (serial only)
+    if (serialCtrl.restartPressed) {
+        m_state = STATE_MENU;
+        audio.stopMusic();
+        Serial.println("\n🔄 GAME RESTARTED");
+        return;
+    }
+
+    // Handle debug commands
+    if (serialCtrl.spawnPowerup) {
+        PowerupType type = (PowerupType)random(0, 5);
+        spawnPowerup(type, random(0, 360), random(30, 60));
+    }
+    if (serialCtrl.addHealth) {
+        m_playerHealth = min(m_playerHealth + 50, m_maxHealth);
+    }
+    if (serialCtrl.skipWave && m_state == STATE_PLAYING) {
+        completeWave();
+    }
+    if (serialCtrl.killAllEnemies) {
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            if (m_enemies[i].active) {
+                spawnExplosion(m_enemies[i].angle, m_enemies[i].radius, m_enemies[i].color);
+                m_enemies[i].active = false;
+                m_score += 5;
+            }
+        }
+    }
 
     // BOOT button (shoot/select)
     if (bootPressed && !m_lastBootState) {

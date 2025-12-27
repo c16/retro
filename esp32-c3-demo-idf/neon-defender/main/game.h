@@ -10,6 +10,7 @@
 #include <TFT_eSPI.h>
 #include <vector>
 #include "config.h"
+#include "serial_control.h"
 
 // Display constants
 #define CENTER_X 80

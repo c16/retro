@@ -27,6 +27,7 @@
 #include "audio.h"
 #include "game.h"
 #include "config.h"
+#include "serial_control.h"
 
 // Display instance
 TFT_eSPI tft = TFT_eSPI();
@@ -101,6 +102,9 @@ void setup() {
     configManager.applyToGame();
     Serial.println("✓ Configuration loaded");
 
+    // Initialize serial controls
+    serialController.begin();
+
     // Initialize game
     Serial.println("Initializing game engine...");
     game = new NeonDefender(tft);
@@ -116,14 +120,19 @@ void setup() {
     Serial.println("║   - GPIO3 (opt): Rotate Right  ║");
     Serial.println("║                                ║");
     Serial.println("║   Serial Commands:             ║");
-    Serial.println("║   - Press 'M' for Config Menu  ║");
+    Serial.println("║   - 'M' = Config Menu          ║");
+    Serial.println("║   - 'H' or '?' = Control Help  ║");
+    Serial.println("║   - SPACE/F = Shoot            ║");
+    Serial.println("║   - A/D = Rotate Left/Right    ║");
+    Serial.println("║   - P = Pause, R = Restart     ║");
     Serial.println("║                                ║");
     Serial.println("║   Audio Output: GPIO2 (PWM)    ║");
     Serial.println("║   Connect to speaker/amp       ║");
     Serial.println("╚════════════════════════════════╝\n");
 
-    Serial.println("GAME READY! Press BOOT to start.\n");
-    Serial.println("💡 Tip: Press 'M' at any time to open the configuration menu\n");
+    Serial.println("GAME READY!\n");
+    Serial.println("💡 Press BOOT button or SPACE to start");
+    Serial.println("💡 Press 'H' for full serial control help\n");
 
     lastUpdate = millis();
     lastAudioUpdate = micros();
@@ -133,9 +142,12 @@ void loop() {
     unsigned long now = millis();
     unsigned long nowMicros = micros();
 
-    // Check for configuration menu request
+    // Check for configuration menu request (before serial controls to avoid conflict)
     configManager.checkForMenuRequest();
     configManager.processInput();
+
+    // Update serial controls
+    serialController.update();
 
     // Update audio at high frequency for smooth playback
     if (nowMicros - lastAudioUpdate >= AUDIO_INTERVAL) {
